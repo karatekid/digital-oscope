@@ -25,10 +25,9 @@ USR_SRC= CppServer.cpp \
 GEN_LNG_SRC = $(shell if [ -d $(GEN_CPP_DIR) ]; then ls $(GEN_CPP_DIR)/*.cpp | grep -v '.skeleton.cpp'; fi)
 GEN_SRC = $(notdir $(GEN_LNG_SRC))
 SRC    = $(USR_SRC) $(GEN_SRC)
-_IDL=tutorial.thrift \
-	shared.thrift
+_IDL=oscope.thrift
 IDL=$(patsubst %,$(IDL_DIR)/%,$(_IDL))
-IDL_SEED=$(patsubst %,$(IDL_DIR)/%,tutorial.thrift)
+IDL_SEED=$(patsubst %,$(IDL_DIR)/%,oscope.thrift)
 _OBJ=$(SRC:.cpp=.o)
 #Generated objs
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))

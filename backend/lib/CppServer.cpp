@@ -28,7 +28,8 @@
 #include <thrift/transport/TTransportUtils.h>
 #include <thrift/transport/THttpServer.h>
 #include <thrift/TToString.h>
-#include "gen-cpp/Calculator.h"
+#include "gen-cpp/Oscope.h"
+#include "gen-cpp/oscope_constants.h"
 
 //Digilent Library
 #include <digilent/waveforms/dwf.h>
@@ -46,9 +47,39 @@ using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 using namespace apache::thrift::server;
 
-using namespace tutorial;
-using namespace shared;
+using namespace ::oscope;
 
+class OscopeHandler : virtual public OscopeIf {
+ public:
+  OscopeHandler() {
+    // Your initialization goes here
+  }
+
+  void ping(DeviceInfo& _return) {
+    // Your implementation goes here
+	_return = oscopeConstants().DIGILENT_DISCOVERY;
+    printf("ping\n");
+  }
+
+  void configMeasurement(const std::map<std::string, MeasurementConfig> & configMap) {
+    // Your implementation goes here
+    printf("configMeasurement\n");
+  }
+
+  void getData(std::vector<Data> & _return) {
+    // Your implementation goes here
+	_return = std::vector<Data>();
+	Data d  = Data();
+	d.__set_value(5);
+	d.__set_timestamp(0);
+	_return.push_back(d);
+    printf("getData\n");
+  }
+
+};
+
+
+/*
 class CalculatorHandler : public CalculatorIf {
  public:
   CalculatorHandler() {}
@@ -114,6 +145,7 @@ protected:
   map<int32_t, SharedStruct> log;
 
 };
+*/
 
 int main(int argc, char **argv) {
 
@@ -124,8 +156,8 @@ int main(int argc, char **argv) {
 
   //Protocol should be JSON
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TJSONProtocolFactory());
-  boost::shared_ptr<CalculatorHandler> handler(new CalculatorHandler());
-  boost::shared_ptr<TProcessor> processor(new CalculatorProcessor(handler));
+  boost::shared_ptr<OscopeHandler> handler(new OscopeHandler());
+  boost::shared_ptr<TProcessor> processor(new OscopeProcessor(handler));
   boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(9090));
   //Transport should be ajax
   boost::shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
@@ -134,31 +166,6 @@ int main(int argc, char **argv) {
                        serverTransport,
                        transportFactory,
                        protocolFactory);
-
-
-  /**
-   * Or you could do one of these
-
-  const int workerCount = 4;
-
-  boost::shared_ptr<ThreadManager> threadManager =
-    ThreadManager::newSimpleThreadManager(workerCount);
-  boost::shared_ptr<PosixThreadFactory> threadFactory =
-    boost::shared_ptr<PosixThreadFactory>(new PosixThreadFactory());
-  threadManager->threadFactory(threadFactory);
-  threadManager->start();
-  TThreadPoolServer server(processor,
-                           serverTransport,
-                           transportFactory,
-                           protocolFactory,
-                           threadManager);
-
-  TThreadedServer server(processor,
-                         serverTransport,
-                         transportFactory,
-                         protocolFactory);
-
-  */
 
   cout << "Starting the server..." << endl;
   server.serve();
