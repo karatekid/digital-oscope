@@ -55,7 +55,6 @@ endif
 all: generate $(BINFILE)
 help:
 	$(E)
-	$(E)$(GEN_LNG_SRC)
 	$(E)This makefile creates a C++ server and a JS client
 	$(E)These are used to communicate with the Digilent
 	$(E)Analog Discovery board. This Makefiles commands are:
@@ -90,6 +89,10 @@ generate: $(IDL)
 	$(Q)if [ ! -d $(GEN_CPP_DIR) ]; then mv gen-cpp backend && make; else rm -rf gen-cpp;	fi
 	$(Q)thrift -r --gen js  $(IDL_SEED)
 	$(Q)if [ ! -d $(GEN_JS_DIR) ]; then mv gen-js frontend; else rm -rf gen-js;	fi 
+
+test: all
+	$(Q)chromium-browser frontend/tutorial.html
+	$(Q)./$(BINFILE)
 
 clean:
 	$(E)Removing Files
