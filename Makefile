@@ -23,14 +23,13 @@ GEN_DIRS = $(GEN_CPP_DIR)\
 BINFILE= cppServer
 USR_SRC= CppServer.cpp \
 
-GEN_LNG_SRC = $(shell ls $(GEN_CPP_DIR)/*.cpp | grep -v '.skeleton.cpp')
+GEN_LNG_SRC = $(shell if [ -d $(GEN_CPP_DIR) ]; then ls $(GEN_CPP_DIR)/*.cpp | grep -v '.skeleton.cpp'; fi)
 GEN_SRC = $(notdir $(GEN_LNG_SRC))
 SRC    = $(USR_SRC) $(GEN_SRC)
 _IDL=tutorial.thrift \
 	shared.thrift
 IDL=$(patsubst %,$(IDL_DIR)/%,$(_IDL))
 IDL_SEED=$(patsubst %,$(IDL_DIR)/%,tutorial.thrift)
-
 
 _OBJ=$(SRC:.cpp=.o)
 #Generated objs
@@ -52,9 +51,10 @@ endif
 
 .PHONY: all help clean
 
-all: $(BINFILE)
+all: generate $(BINFILE)
 help:
 	$(E)
+	$(E)$(GEN_LNG_SRC)
 	$(E)This makefile creates a C++ server and a JS client
 	$(E)These are used to communicate with the Digilent
 	$(E)Analog Discovery board. This Makefiles commands are:
@@ -85,9 +85,10 @@ $(BINFILE):	$(OBJ) $(DEPS)
 generate: $(IDL)
 	$(E)Generating C++ and JS files from IDL
 	$(Q)thrift -r --gen cpp $(IDL_SEED)
-	$(Q)mv gen-cpp backend/gen-cpp
+	$(Q)#This hack allows me to restart make, and recompute globals on first gen
+	$(Q)if [ ! -d $(GEN_CPP_DIR) ]; then mv gen-cpp backend && make; else rm -rf gen-cpp;	fi
 	$(Q)thrift -r --gen js  $(IDL_SEED)
-	$(Q)mv gen-js frontend/gen-js
+	$(Q)if [ ! -d $(GEN_JS_DIR) ]; then mv gen-js frontend; else rm -rf gen-js;	fi 
 
 clean:
 	$(E)Removing Files
