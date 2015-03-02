@@ -16,8 +16,9 @@ LDIR=backend/lib
 ODIR=backend/obj
 IDL_DIR=idl
 GEN_CPP_DIR = backend/gen-cpp
+GEN_JS_DIR = frontend/gen-js
 GEN_DIRS = $(GEN_CPP_DIR)\
-		   frontend/gen-js
+		   $(GEN_JS_DIR)
 
 #Files
 BINFILE= cppServer
