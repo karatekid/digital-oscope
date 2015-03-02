@@ -1,1 +1,8 @@
+#Specific file types
 *.o
+*.swp
+#Specific Directories
+gen-cpp/
+gen-js/
+#Specific files
+cppServer
