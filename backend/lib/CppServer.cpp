@@ -50,9 +50,20 @@ using namespace apache::thrift::server;
 using namespace ::oscope;
 
 class OscopeHandler : virtual public OscopeIf {
+ protected:
+	HDWF device;
+	int channel;
+	int bufSize;
  public:
   OscopeHandler() {
-    // Your initialization goes here
+	  //Setup device
+	  int numDevices = 0;
+	  FDwfEnum(enumfilterAll, &numDevices);
+	  if(numDevices == 0) {
+		  cerr << "Need an Oscilloscope\n" << endl;
+		  exit(1);
+	  }
+	  FDwfDeviceOpen(-1, &device);
   }
 
   void ping(DeviceInfo& _return) {
@@ -63,112 +74,75 @@ class OscopeHandler : virtual public OscopeIf {
 
   void configMeasurement(const std::map<std::string, MeasurementConfig> & configMap) {
     // Your implementation goes here
+	//Start stuff
+	FDwfAnalogInReset(device);
+	FDwfAnalogInAcquisitionModeSet(device, acqmodeSingle);
+	double frequency = 100000;
+	channel = 1;
+	bufSize = 5000;
+
+	FDwfAnalogInFrequencySet(device, frequency);
+	FDwfAnalogInChannelEnableSet(device, channel, true);
+	FDwfAnalogInChannelRangeSet(device, channel, 2);
+
+	FDwfAnalogInBufferSizeSet(device, bufSize);
+	//Get actual buffer size
+	FDwfAnalogInBufferSizeGet(device, &bufSize);
+	FDwfAnalogInFrequencyGet(device, &frequency);
+	FDwfAnalogInRecordLengthSet(device, bufSize / frequency);
+	
+	sleep(1);
+
+	//Start
+	FDwfAnalogInConfigure(device, true, true);
+	DwfState devState = DwfStateRunning;
+	//Finish
+	while(devState != DwfStateDone) {
+		FDwfAnalogInStatus(device, true, &devState);
+	}
+
     printf("configMeasurement\n");
   }
 
   void getData(std::vector<Data> & _return) {
-    // Your implementation goes here
-	_return = std::vector<Data>();
-	Data d  = Data();
-	d.__set_value(5);
-	d.__set_timestamp(0);
-	_return.push_back(d);
+	double * data = new double[bufSize];
+	FDwfAnalogInStatusData(device,channel, data, bufSize); 
+	Data d = Data();
+	for(int i = 0; i < bufSize; ++i) {
+		d.__set_value(data[i]);
+		d.__set_timestamp(i);
+		_return.push_back(d);
+		printf("%d\t%f\n", i, data[i]);
+	}
+	//_return.assign(data, data + bufSize);
+	delete[] data;
+	//Stop instrument
+	FDwfAnalogInConfigure(device, false, false);
     printf("getData\n");
   }
 
-};
-
-
-/*
-class CalculatorHandler : public CalculatorIf {
- public:
-  CalculatorHandler() {}
-
-  void ping() {
-    cout << "ping()" << endl;
+  ~OscopeHandler() {
+	  FDwfDeviceCloseAll();
   }
-
-  int32_t add(const int32_t n1, const int32_t n2) {
-    cout << "add(" << n1 << ", " << n2 << ")" << endl;
-    return n1 + n2;
-  }
-
-  int32_t calculate(const int32_t logid, const Work& work) {
-    cout << "calculate(" << logid << ", " << work << ")" << endl;
-    int32_t val;
-
-    switch (work.op) {
-    case Operation::ADD:
-      val = work.num1 + work.num2;
-      break;
-    case Operation::SUBTRACT:
-      val = work.num1 - work.num2;
-      break;
-    case Operation::MULTIPLY:
-      val = work.num1 * work.num2;
-      break;
-    case Operation::DIVIDE:
-      if (work.num2 == 0) {
-        InvalidOperation io;
-        io.what = work.op;
-        io.why = "Cannot divide by 0";
-        throw io;
-      }
-      val = work.num1 / work.num2;
-      break;
-    default:
-      InvalidOperation io;
-      io.what = work.op;
-      io.why = "Invalid Operation";
-      throw io;
-    }
-
-    SharedStruct ss;
-    ss.key = logid;
-    ss.value = to_string(val);
-
-    log[logid] = ss;
-
-    return val;
-  }
-
-  void getStruct(SharedStruct &ret, const int32_t logid) {
-    cout << "getStruct(" << logid << ")" << endl;
-    ret = log[logid];
-  }
-
-  void zip() {
-    cout << "zip()" << endl;
-  }
-
-protected:
-  map<int32_t, SharedStruct> log;
 
 };
-*/
 
 int main(int argc, char **argv) {
+	//Protocol should be JSON
+	boost::shared_ptr<TProtocolFactory> protocolFactory(new TJSONProtocolFactory());
+	boost::shared_ptr<OscopeHandler> handler(new OscopeHandler());
+	boost::shared_ptr<TProcessor> processor(new OscopeProcessor(handler));
+	boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(9090));
+	//Transport should be ajax
+	boost::shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
 
-  int numDevices = 0;
-  FDwfEnum(enumfilterAll, &numDevices);
-  HDWF device;
-  FDwfDeviceOpen(-1, &device);
+	TSimpleServer server(processor,
+			serverTransport,
+			transportFactory,
+			protocolFactory);
 
-  //Protocol should be JSON
-  boost::shared_ptr<TProtocolFactory> protocolFactory(new TJSONProtocolFactory());
-  boost::shared_ptr<OscopeHandler> handler(new OscopeHandler());
-  boost::shared_ptr<TProcessor> processor(new OscopeProcessor(handler));
-  boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(9090));
-  //Transport should be ajax
-  boost::shared_ptr<TTransportFactory> transportFactory(new THttpServerTransportFactory());
-
-  TSimpleServer server(processor,
-                       serverTransport,
-                       transportFactory,
-                       protocolFactory);
-
-  cout << "Starting the server..." << endl;
-  server.serve();
-  cout << "Done." << endl;
-  return 0;
+	cout << "Starting the server..." << endl;
+	server.serve();
+	cout << "Done." << endl;
+	return 0;
 }

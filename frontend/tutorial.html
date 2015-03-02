@@ -40,10 +40,10 @@
   } catch(err) {
   }
 
-  //client.configMeasurement();
   
   function calc() {
   	try {
+		client.configMeasurement({});
   		var dataArray = client.getData();
   		for(var i = 0; i < dataArray.length; ++i) {
 			var dstr = dataArray[i].value + " @ " + dataArray[i].timestamp;
