@@ -22,6 +22,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Thrift Javascript Bindings - Tutorial Example</title>
 
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
   <script src="thrift.js"                   type="text/javascript"></script>
   <script src="gen-js/oscope_types.js"    type="text/javascript"></script>
   <script src="gen-js/Oscope.js"        type="text/javascript"></script>
@@ -40,22 +41,53 @@
   } catch(err) {
   }
 
+  function dataToArrs(dataset) {
+	  var arr = [];
+	  for(var i = 0; i < dataset.length; ++i) {
+		  arr.push([dataset[i].timestamp,dataset[i].value]);
+	  }
+	  return arr;
+  }
   
   function calc() {
   	try {
 		client.configMeasurement({});
   		var dataArray = client.getData();
+		/*
   		for(var i = 0; i < dataArray.length; ++i) {
 			var dstr = dataArray[i].value + " @ " + dataArray[i].timestamp;
   			console.log(dstr);
   			$('#result').text(dstr);
   			$('#result').css('color', 'green');
   		}
+		*/
+		drawChart(dataToArrs(dataArray));
   	} catch(err){
   		$('#result').text(err.why);
   		$('#result').css('color', 'red');
   	}
   }
+
+  google.load("visualization", "1", {packages:["corechart"]});
+  google.setOnLoadCallback(calc);
+  function drawChart(dataset) {
+	console.log(dataset);
+  	var data = google.visualization.arrayToDataTable(
+  			[['Time', 'Volts']].concat(dataset)
+  			);
+  
+  	var options = {
+  	   title: 'Example Chart',
+  	   hAxis: {title: 'Time',  titleTextStyle: {color: '#333'}},
+  	   vAxis: {title: 'Voltage', minValue: 0},
+  	   //animation: {duration: 1000, startup: true, easing: 'linear'},
+  	   chartArea: {left: '10%'},
+  	};
+  
+  	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+  	chart.draw(data, options);
+  }
+
   //]]>
   </script>
 
@@ -63,5 +95,6 @@
 <body>
   <input type="button" id="calculate" value="Get Data" onclick="javascript:calc();"/>
   <p id="result"></p>
+  <div id="chart_div" style="width: 900px; height: 500px;"></div>
 </body>
 </html>

@@ -77,8 +77,8 @@ class OscopeHandler : virtual public OscopeIf {
 	//Start stuff
 	FDwfAnalogInReset(device);
 	FDwfAnalogInAcquisitionModeSet(device, acqmodeSingle);
-	double frequency = 100000;
-	channel = 1;
+	double frequency = 1000000;
+	channel = 1; //0-indexed
 	bufSize = 5000;
 
 	FDwfAnalogInFrequencySet(device, frequency);
