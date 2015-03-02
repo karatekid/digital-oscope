@@ -2,14 +2,13 @@
 CXX=g++
 BOOST_DIR  = /home/michael/Development/boost_1_57_0 
 THRIFT_DIR = /usr/local/include/thrift
-USR_LIB    = /usr/local/lib
 CPPFLAGS   = -I$(BOOST_DIR)\
 		     -I$(THRIFT_DIR)\
 			 -Ibackend 
-LDFLAGS    = -L$(USR_LIB) \
-
+LDFLAGS    = -L/usr/local/lib\
+			 -L/usr/lib
 LIBS       = -lthrift \
-
+			 -ldwf
 #Directories
 IDIR=backend/include
 LDIR=backend/lib
@@ -19,7 +18,6 @@ GEN_CPP_DIR = backend/gen-cpp
 GEN_JS_DIR = frontend/gen-js
 GEN_DIRS = $(GEN_CPP_DIR)\
 		   $(GEN_JS_DIR)
-
 #Files
 BINFILE= cppServer
 USR_SRC= CppServer.cpp \
@@ -31,7 +29,6 @@ _IDL=tutorial.thrift \
 	shared.thrift
 IDL=$(patsubst %,$(IDL_DIR)/%,$(_IDL))
 IDL_SEED=$(patsubst %,$(IDL_DIR)/%,tutorial.thrift)
-
 _OBJ=$(SRC:.cpp=.o)
 #Generated objs
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -51,7 +48,6 @@ else
 endif
 
 .PHONY: all help clean
-
 all: generate $(BINFILE)
 help:
 	$(E)

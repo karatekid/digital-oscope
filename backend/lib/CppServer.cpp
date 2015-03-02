@@ -17,6 +17,7 @@
  * under the License.
  */
 
+//Thrift Libraries
 #include <thrift/concurrency/ThreadManager.h>
 #include <thrift/concurrency/PosixThreadFactory.h>
 #include <thrift/protocol/TJSONProtocol.h>
@@ -27,12 +28,16 @@
 #include <thrift/transport/TTransportUtils.h>
 #include <thrift/transport/THttpServer.h>
 #include <thrift/TToString.h>
+#include "gen-cpp/Calculator.h"
 
+//Digilent Library
+#include <digilent/waveforms/dwf.h>
+
+//Standard Libraries
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
 
-#include "gen-cpp/Calculator.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -111,6 +116,11 @@ protected:
 };
 
 int main(int argc, char **argv) {
+
+  int numDevices = 0;
+  FDwfEnum(enumfilterAll, &numDevices);
+  HDWF device;
+  FDwfDeviceOpen(-1, &device);
 
   //Protocol should be JSON
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TJSONProtocolFactory());
