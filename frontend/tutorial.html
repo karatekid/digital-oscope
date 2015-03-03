@@ -35,9 +35,11 @@
   var protocol  = new Thrift.Protocol(transport);
   var client    = new OscopeClient(protocol);
   var devInfo;
+  var doneDrawing = false;
   try {
   	devInfo   = client.ping();
 	console.log(devInfo);
+	client.configMeasurement({});
   } catch(err) {
   }
 
@@ -51,8 +53,12 @@
   
   function calc() {
   	try {
-		client.configMeasurement({});
+		doneDrawing = false;
+		var start = (new Date()).getTime();
+		//Takes ~100ms for 5000 pts
   		var dataArray = client.getData();
+		var end   = (new Date()).getTime();
+		console.log((end - start) + "ms for " + dataArray.length + " points");
 		/*
   		for(var i = 0; i < dataArray.length; ++i) {
 			var dstr = dataArray[i].value + " @ " + dataArray[i].timestamp;
@@ -61,17 +67,27 @@
   			$('#result').css('color', 'green');
   		}
 		*/
+		//Takes ~400ms for 5000 pts
 		drawChart(dataToArrs(dataArray));
+		doneDrawing = true;
   	} catch(err){
   		$('#result').text(err.why);
   		$('#result').css('color', 'red');
   	}
   }
 
+  setInterval(
+		function(){
+		  if(doneDrawing){
+		  	calc();
+		  }
+		},
+		500);
+	
   google.load("visualization", "1", {packages:["corechart"]});
   google.setOnLoadCallback(calc);
   function drawChart(dataset) {
-	console.log(dataset);
+	//console.log(dataset);
   	var data = google.visualization.arrayToDataTable(
   			[['Time', 'Volts']].concat(dataset)
   			);

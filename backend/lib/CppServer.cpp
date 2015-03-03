@@ -76,10 +76,10 @@ class OscopeHandler : virtual public OscopeIf {
     // Your implementation goes here
 	//Start stuff
 	FDwfAnalogInReset(device);
-	FDwfAnalogInAcquisitionModeSet(device, acqmodeSingle);
-	double frequency = 1000000;
-	channel = 1; //0-indexed
-	bufSize = 5000;
+	FDwfAnalogInAcquisitionModeSet(device, acqmodeScanShift);
+	double frequency = 100000;
+	channel = 0; //0-indexed
+	bufSize = 10000;
 
 	FDwfAnalogInFrequencySet(device, frequency);
 	FDwfAnalogInChannelEnableSet(device, channel, true);
@@ -89,7 +89,8 @@ class OscopeHandler : virtual public OscopeIf {
 	//Get actual buffer size
 	FDwfAnalogInBufferSizeGet(device, &bufSize);
 	FDwfAnalogInFrequencyGet(device, &frequency);
-	FDwfAnalogInRecordLengthSet(device, bufSize / frequency);
+	printf("Freq: %f\n", frequency);
+	//FDwfAnalogInRecordLengthSet(device, bufSize / frequency);
 	
 	sleep(1);
 
@@ -97,28 +98,32 @@ class OscopeHandler : virtual public OscopeIf {
 	FDwfAnalogInConfigure(device, true, true);
 	DwfState devState = DwfStateRunning;
 	//Finish
+	/*
 	while(devState != DwfStateDone) {
 		FDwfAnalogInStatus(device, true, &devState);
 	}
+	*/
 
     printf("configMeasurement\n");
   }
 
   void getData(std::vector<Data> & _return) {
-	double * data = new double[bufSize];
-	FDwfAnalogInStatusData(device,channel, data, bufSize); 
-	Data d = Data();
-	for(int i = 0; i < bufSize; ++i) {
-		d.__set_value(data[i]);
-		d.__set_timestamp(i);
-		_return.push_back(d);
-		printf("%d\t%f\n", i, data[i]);
-	}
-	//_return.assign(data, data + bufSize);
-	delete[] data;
-	//Stop instrument
-	FDwfAnalogInConfigure(device, false, false);
-    printf("getData\n");
+	  DwfState devState;
+	  FDwfAnalogInStatus(device, true, &devState);
+	  double * data = new double[bufSize];
+	  FDwfAnalogInStatusData(device,channel, data, bufSize); 
+	  Data d = Data();
+	  for(int i = 0; i < bufSize; ++i) {
+		  d.__set_value(data[i]);
+		  d.__set_timestamp(i);
+		  _return.push_back(d);
+		  //printf("%d\t%f\n", i, data[i]);
+	  }
+	  //_return.assign(data, data + bufSize);
+	  delete[] data;
+	  //Stop instrument
+	  FDwfAnalogInConfigure(device, false, false);
+	  printf("getData\n");
   }
 
   ~OscopeHandler() {
