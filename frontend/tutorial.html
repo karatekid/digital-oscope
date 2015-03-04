@@ -76,6 +76,27 @@
   	}
   }
 
+  function testUpdate(n, t) {
+	  var r = document.createElement("tr");
+	  var td = document.createElement("td");
+	  td.innerText = n;
+	  r.appendChild(td);
+	  td = document.createElement("td");
+	  td.innerText = t;
+	  r.appendChild(td);
+	  document.querySelectorAll("#throughput-table")[0].appendChild(r);
+  }
+
+  function testThroughput(n) {
+	  var start = (new Date()).getTime();
+	  //Takes ~100ms for 5000 pts
+	  var testArr = client.testThroughput(n);
+	  var end   = (new Date()).getTime();
+	  //console.log(testArr.length + "\t" + (end - start));
+	  testUpdate(n, (end - start));
+  }
+
+  /*
   setInterval(
 		function(){
 		  if(doneDrawing){
@@ -83,6 +104,7 @@
 		  }
 		},
 		500);
+  */
 	
   google.load("visualization", "1", {packages:["corechart"]});
   google.setOnLoadCallback(calc);
@@ -113,4 +135,6 @@
   <p id="result"></p>
   <div id="chart_div" style="width: 900px; height: 500px;"></div>
 </body>
+<table id="throughput-table">
+</table>
 </html>

@@ -38,6 +38,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <ctime>
 
 
 using namespace std;
@@ -49,81 +50,123 @@ using namespace apache::thrift::server;
 
 using namespace ::oscope;
 
+
 class OscopeHandler : virtual public OscopeIf {
  protected:
 	HDWF device;
+	bool deviceInit;
 	int channel;
 	int bufSize;
+	bool *throughputArray;
+	int throughputSize;
+	InvalidOperation DEV_NOT_FOUND;
  public:
   OscopeHandler() {
+	  DEV_NOT_FOUND = InvalidOperation();
+	  DEV_NOT_FOUND.why = "Device not found";
+	  //Create Testing array
+	  throughputSize = 1000000;
+	  throughputArray = new bool[throughputSize];
+	  for(int i = 0; i < throughputSize; ++i) {
+		  if(i%2) {
+			  throughputArray[i] = true;
+		  } else {
+			  throughputArray[i] = false;
+		  }
+	  }
 	  //Setup device
 	  int numDevices = 0;
 	  FDwfEnum(enumfilterAll, &numDevices);
 	  if(numDevices == 0) {
+		  /*
 		  cerr << "Need an Oscilloscope\n" << endl;
 		  exit(1);
+		  */
+		  deviceInit = false;
+		  return;
 	  }
 	  FDwfDeviceOpen(-1, &device);
+	  deviceInit = true;
   }
 
   void ping(DeviceInfo& _return) {
-    // Your implementation goes here
-	_return = oscopeConstants().DIGILENT_DISCOVERY;
-    printf("ping\n");
+	  // Your implementation goes here
+	  if(deviceInit) {
+		  _return = oscopeConstants().DIGILENT_DISCOVERY;
+		  printf("ping\n");
+	  } else {
+		  throw DEV_NOT_FOUND;
+	  }
   }
 
   void configMeasurement(const std::map<std::string, MeasurementConfig> & configMap) {
-    // Your implementation goes here
-	//Start stuff
-	FDwfAnalogInReset(device);
-	FDwfAnalogInAcquisitionModeSet(device, acqmodeScanShift);
-	double frequency = 100000;
-	channel = 0; //0-indexed
-	bufSize = 10000;
+      // Your implementation goes here
+	  //Start stuff
+	  if(deviceInit) {
+		  FDwfAnalogInReset(device);
+		  FDwfAnalogInAcquisitionModeSet(device, acqmodeScanShift);
+		  double frequency = 100000;
+		  channel = 0; //0-indexed
+		  bufSize = 10000;
 
-	FDwfAnalogInFrequencySet(device, frequency);
-	FDwfAnalogInChannelEnableSet(device, channel, true);
-	FDwfAnalogInChannelRangeSet(device, channel, 2);
+		  FDwfAnalogInFrequencySet(device, frequency);
+		  FDwfAnalogInChannelEnableSet(device, channel, true);
+		  FDwfAnalogInChannelRangeSet(device, channel, 2);
 
-	FDwfAnalogInBufferSizeSet(device, bufSize);
-	//Get actual buffer size
-	FDwfAnalogInBufferSizeGet(device, &bufSize);
-	FDwfAnalogInFrequencyGet(device, &frequency);
-	printf("Freq: %f\n", frequency);
-	//FDwfAnalogInRecordLengthSet(device, bufSize / frequency);
-	
-	sleep(1);
+		  FDwfAnalogInBufferSizeSet(device, bufSize);
+		  //Get actual buffer size
+		  FDwfAnalogInBufferSizeGet(device, &bufSize);
+		  FDwfAnalogInFrequencyGet(device, &frequency);
+		  printf("Freq: %f\n", frequency);
+		  //FDwfAnalogInRecordLengthSet(device, bufSize / frequency);
 
-	//Start
-	FDwfAnalogInConfigure(device, true, true);
-	DwfState devState = DwfStateRunning;
-	//Finish
-	/*
-	while(devState != DwfStateDone) {
-		FDwfAnalogInStatus(device, true, &devState);
-	}
-	*/
+		  sleep(1);
 
-    printf("configMeasurement\n");
+		  //Start
+		  FDwfAnalogInConfigure(device, true, true);
+		  DwfState devState = DwfStateRunning;
+		  //Finish
+		  /*
+			 while(devState != DwfStateDone) {
+			 FDwfAnalogInStatus(device, true, &devState);
+			 }
+			 */
+		  printf("configMeasurement\n");
+	  } else {
+		  throw DEV_NOT_FOUND;
+	  }
   }
 
   void getData(std::vector<Data> & _return) {
 	  DwfState devState;
-	  FDwfAnalogInStatus(device, true, &devState);
-	  double * data = new double[bufSize];
-	  FDwfAnalogInStatusData(device,channel, data, bufSize); 
-	  Data d = Data();
-	  for(int i = 0; i < bufSize; ++i) {
-		  d.__set_value(data[i]);
-		  d.__set_timestamp(i);
-		  _return.push_back(d);
-		  //printf("%d\t%f\n", i, data[i]);
+	  if(deviceInit) {
+		  FDwfAnalogInStatus(device, true, &devState);
+		  double * data = new double[bufSize];
+		  FDwfAnalogInStatusData(device,channel, data, bufSize); 
+		  Data d = Data();
+		  for(int i = 0; i < bufSize; ++i) {
+			  d.__set_value(data[i]);
+			  d.__set_timestamp(i);
+			  _return.push_back(d);
+			  //printf("%d\t%f\n", i, data[i]);
+		  }
+		  //_return.assign(data, data + bufSize);
+		  delete[] data;
+		  //Stop instrument
+		  FDwfAnalogInConfigure(device, false, false);
+		  printf("getData\n");
+	  } else {
+		  throw DEV_NOT_FOUND;
 	  }
-	  //_return.assign(data, data + bufSize);
-	  delete[] data;
-	  //Stop instrument
-	  FDwfAnalogInConfigure(device, false, false);
-	  printf("getData\n");
+  }
+
+  void testThroughput(std::vector<bool> & _return, const int32_t n) {
+	//std::clock_t start = clock();
+	_return.assign(throughputArray, throughputArray + min(n,throughputSize));
+	/*
+	std::clock_t end = clock();
+	cout << n << "\t" << (end - start + 0.0) << endl;
+	*/
   }
 
   ~OscopeHandler() {
