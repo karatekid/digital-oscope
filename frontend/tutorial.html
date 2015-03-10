@@ -90,10 +90,18 @@
 	  document.querySelectorAll("#throughput-table")[0].appendChild(r);
   }
 
+  function i16AdcToDouble(val, step, offset) {
+	  return val * step + offset;
+  }
+
   function testThroughput(n) {
 	  var start = (new Date()).getTime();
 	  //Takes ~100ms for 5000 pts
 	  var testArr = client.testThroughput(n);
+	  var dblArr = [];
+	  for(var i = 0; i < testArr.length; ++i) {
+		  dblArr[i] = i16AdcToDouble(testArr[i],0.125, -2.5);
+	  }
 	  var end   = (new Date()).getTime();
 	  console.log(testArr.length + "\t" + (end - start));
 	  testUpdate(n, (end - start));

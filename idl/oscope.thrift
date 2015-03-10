@@ -4,6 +4,7 @@
  *
  */
 
+
 /**
  * Thrift files can namespace, package, or prefix their output in various
  * target languages.
@@ -13,6 +14,7 @@ namespace d oscope
 namespace java oscope
 namespace php oscope
 namespace perl oscope
+
 
 enum DeviceType {
   DISCOVERY = 1,
@@ -47,6 +49,13 @@ const DeviceInfo DIGILENT_DISCOVERY = {
 struct MeasurementConfig {
 }
 
+struct Data {
+	1: i32 timestamp,
+	2: double value
+}
+
+typedef i16 TestType
+
 exception InvalidOperation {
   1: i32 what,
   2: string why
@@ -60,7 +69,7 @@ service Oscope {
 
    list<double> getData() throws (1:InvalidOperation err),
 
-   list<double> testThroughput(1:i32 n)
+   list<TestType> testThroughput(1:i32 n)
 
 }
 

@@ -50,8 +50,6 @@ using namespace apache::thrift::server;
 
 using namespace ::oscope;
 
-typedef double TestType;
-
 class OscopeHandler : virtual public OscopeIf {
  protected:
 	HDWF device;
@@ -152,9 +150,17 @@ class OscopeHandler : virtual public OscopeIf {
 	  }
   }
 
+  static int16_t doubleToI16(double val, double step, double offset){
+	  return (int16_t) (val - offset)/step;
+  }
+
   void testThroughput(std::vector<TestType> & _return, const int32_t n) {
 	//std::clock_t start = clock();
 	_return.assign(throughputArray, throughputArray + min(n,throughputSize));
+	//Convert
+	for(int32_t i = 0; i < n; ++i) {
+		_return[i] = (TestType) doubleToI16(_return[i], 0.125, -2.5);
+	}
 	/*
 	std::clock_t end = clock();
 	cout << n << "\t" << (end - start + 0.0) << endl;
