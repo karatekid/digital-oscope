@@ -50,6 +50,7 @@ using namespace apache::thrift::server;
 
 using namespace ::oscope;
 
+typedef double TestType;
 
 class OscopeHandler : virtual public OscopeIf {
  protected:
@@ -57,7 +58,7 @@ class OscopeHandler : virtual public OscopeIf {
 	bool deviceInit;
 	int channel;
 	int bufSize;
-	bool *throughputArray;
+	TestType *throughputArray;
 	int throughputSize;
 	InvalidOperation DEV_NOT_FOUND;
  public:
@@ -66,13 +67,9 @@ class OscopeHandler : virtual public OscopeIf {
 	  DEV_NOT_FOUND.why = "Device not found";
 	  //Create Testing array
 	  throughputSize = 1000000;
-	  throughputArray = new bool[throughputSize];
+	  throughputArray = new TestType[throughputSize];
 	  for(int i = 0; i < throughputSize; ++i) {
-		  if(i%2) {
-			  throughputArray[i] = true;
-		  } else {
-			  throughputArray[i] = false;
-		  }
+		  throughputArray[i] = (TestType)rand();
 	  }
 	  //Setup device
 	  int numDevices = 0;
@@ -137,30 +134,25 @@ class OscopeHandler : virtual public OscopeIf {
 	  }
   }
 
-  void getData(std::vector<Data> & _return) {
+  void getData(std::vector<double> & _return) {
+	  std::clock_t start = clock();
 	  DwfState devState;
 	  if(deviceInit) {
 		  FDwfAnalogInStatus(device, true, &devState);
 		  double * data = new double[bufSize];
 		  FDwfAnalogInStatusData(device,channel, data, bufSize); 
-		  Data d = Data();
-		  for(int i = 0; i < bufSize; ++i) {
-			  d.__set_value(data[i]);
-			  d.__set_timestamp(i);
-			  _return.push_back(d);
-			  //printf("%d\t%f\n", i, data[i]);
-		  }
-		  //_return.assign(data, data + bufSize);
+		  _return.assign(data, data + bufSize);
 		  delete[] data;
 		  //Stop instrument
 		  FDwfAnalogInConfigure(device, false, false);
-		  printf("getData\n");
+		  std::clock_t end = clock();
+		  cout << "getData took" << "\t" << (end - start + 0.0) << endl;
 	  } else {
 		  throw DEV_NOT_FOUND;
 	  }
   }
 
-  void testThroughput(std::vector<bool> & _return, const int32_t n) {
+  void testThroughput(std::vector<TestType> & _return, const int32_t n) {
 	//std::clock_t start = clock();
 	_return.assign(throughputArray, throughputArray + min(n,throughputSize));
 	/*

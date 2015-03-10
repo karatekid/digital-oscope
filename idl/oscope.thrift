@@ -47,12 +47,6 @@ const DeviceInfo DIGILENT_DISCOVERY = {
 struct MeasurementConfig {
 }
 
-struct Data {
-  1: i32 timestamp = 0,
-  2: double value  = 0,
-}
-
-
 exception InvalidOperation {
   1: i32 what,
   2: string why
@@ -64,9 +58,9 @@ service Oscope {
 
    void configMeasurement(1:map<string,MeasurementConfig> configMap) throws (1:InvalidOperation err),
 
-   list<Data> getData() throws (1:InvalidOperation err),
+   list<double> getData() throws (1:InvalidOperation err),
 
-   list<bool> testThroughput(1:i32 n)
+   list<double> testThroughput(1:i32 n)
 
 }
 

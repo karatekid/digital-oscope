@@ -46,7 +46,7 @@
   function dataToArrs(dataset) {
 	  var arr = [];
 	  for(var i = 0; i < dataset.length; ++i) {
-		  arr.push([dataset[i].timestamp,dataset[i].value]);
+		  arr.push([i,dataset[i]]);
 	  }
 	  return arr;
   }
@@ -58,7 +58,7 @@
 		//Takes ~100ms for 5000 pts
   		var dataArray = client.getData();
 		var end   = (new Date()).getTime();
-		console.log((end - start) + "ms for " + dataArray.length + " points");
+		console.log((end - start) + "ms to receive " + dataArray.length + " points");
 		/*
   		for(var i = 0; i < dataArray.length; ++i) {
 			var dstr = dataArray[i].value + " @ " + dataArray[i].timestamp;
@@ -68,7 +68,10 @@
   		}
 		*/
 		//Takes ~400ms for 5000 pts
+		start   = (new Date()).getTime();
 		drawChart(dataToArrs(dataArray));
+		end   = (new Date()).getTime();
+		console.log((end - start) + "ms to draw " + dataArray.length + " points");
 		doneDrawing = true;
   	} catch(err){
   		$('#result').text(err.why);
@@ -92,7 +95,7 @@
 	  //Takes ~100ms for 5000 pts
 	  var testArr = client.testThroughput(n);
 	  var end   = (new Date()).getTime();
-	  //console.log(testArr.length + "\t" + (end - start));
+	  console.log(testArr.length + "\t" + (end - start));
 	  testUpdate(n, (end - start));
   }
 
