@@ -54,6 +54,12 @@ struct Data {
 	2: double value
 }
 
+struct ADCVals {
+	1: double step,
+	2: double base,
+	3: list<i16> vals
+}
+
 typedef i16 TestType
 
 exception InvalidOperation {
@@ -67,7 +73,7 @@ service Oscope {
 
    void configMeasurement(1:map<string,MeasurementConfig> configMap) throws (1:InvalidOperation err),
 
-   list<double> getData() throws (1:InvalidOperation err),
+   ADCVals getData() throws (1:InvalidOperation err),
 
    list<TestType> testThroughput(1:i32 n)
 

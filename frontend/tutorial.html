@@ -56,18 +56,15 @@
 		doneDrawing = false;
 		var start = (new Date()).getTime();
 		//Takes ~100ms for 5000 pts
-  		var dataArray = client.getData();
+  		var data = client.getData();
+		var dataArray = data.vals;
+		for(var i = 0; i < dataArray.length; ++i) {
+			dataArray[i] = i16AdcToDouble(dataArray[i],data.step,data.base);
+		}
 		var end   = (new Date()).getTime();
 		console.log((end - start) + "ms to receive " + dataArray.length + " points");
-		/*
-  		for(var i = 0; i < dataArray.length; ++i) {
-			var dstr = dataArray[i].value + " @ " + dataArray[i].timestamp;
-  			console.log(dstr);
-  			$('#result').text(dstr);
-  			$('#result').css('color', 'green');
-  		}
-		*/
-		//Takes ~400ms for 5000 pts
+		//testUpdate(dataArray.length,(end-start));
+
 		start   = (new Date()).getTime();
 		drawChart(dataToArrs(dataArray));
 		end   = (new Date()).getTime();

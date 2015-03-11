@@ -56,6 +56,7 @@ class OscopeHandler : virtual public OscopeIf {
 	bool deviceInit;
 	int channel;
 	int bufSize;
+	int numBits;
 	TestType *throughputArray;
 	int throughputSize;
 	InvalidOperation DEV_NOT_FOUND;
@@ -82,6 +83,10 @@ class OscopeHandler : virtual public OscopeIf {
 	  }
 	  FDwfDeviceOpen(-1, &device);
 	  deviceInit = true;
+	  FDwfAnalogInBitsInfo(device, &numBits);
+	  double minVolts, maxVolts, rSteps;
+	  FDwfAnalogInChannelRangeInfo(device,&minVolts,&maxVolts,&rSteps);
+	  FDwfAnalogInChannelOffsetInfo(device,&minVolts,&maxVolts,&rSteps);
   }
 
   void ping(DeviceInfo& _return) {
@@ -132,26 +137,36 @@ class OscopeHandler : virtual public OscopeIf {
 	  }
   }
 
-  void getData(std::vector<double> & _return) {
-	  std::clock_t start = clock();
-	  DwfState devState;
+  void getData(ADCVals & _return) {
 	  if(deviceInit) {
+		  DwfState devState;
 		  FDwfAnalogInStatus(device, true, &devState);
+
+		  _return = ADCVals();
+		  double range;
+		  FDwfAnalogInChannelRangeGet(device, channel, &range);
+		  _return.step = range/((1 << numBits) - 1); 
+
+		  double offset;
+		  FDwfAnalogInChannelOffsetGet(device, channel, &offset);
+		  _return.base = offset;
+
 		  double * data = new double[bufSize];
 		  FDwfAnalogInStatusData(device,channel, data, bufSize); 
-		  _return.assign(data, data + bufSize);
+		  _return.vals.resize(bufSize);
+		  for(int i = 0; i < bufSize; ++i) {
+			  _return.vals[i] = doubleToI16(data[i],_return.step,_return.base);
+		  }
 		  delete[] data;
 		  //Stop instrument
 		  FDwfAnalogInConfigure(device, false, false);
-		  std::clock_t end = clock();
-		  cout << "getData took" << "\t" << (end - start + 0.0) << endl;
 	  } else {
 		  throw DEV_NOT_FOUND;
 	  }
   }
 
   static int16_t doubleToI16(double val, double step, double offset){
-	  return (int16_t) (val - offset)/step;
+	  return (int16_t) ((val - offset)/step);
   }
 
   void testThroughput(std::vector<TestType> & _return, const int32_t n) {
