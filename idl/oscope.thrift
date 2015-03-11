@@ -75,7 +75,7 @@ service Oscope {
 
    ADCVals getData() throws (1:InvalidOperation err),
 
-   list<TestType> testThroughput(1:i32 n)
+   ADCVals testThroughput(1:i32 n)
 
 }
 

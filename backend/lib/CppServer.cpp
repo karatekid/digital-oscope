@@ -169,17 +169,11 @@ class OscopeHandler : virtual public OscopeIf {
 	  return (int16_t) ((val - offset)/step);
   }
 
-  void testThroughput(std::vector<TestType> & _return, const int32_t n) {
-	//std::clock_t start = clock();
-	_return.assign(throughputArray, throughputArray + min(n,throughputSize));
-	//Convert
+  void testThroughput(ADCVals & _return, const int32_t n) {
+	_return.vals.resize(n);
 	for(int32_t i = 0; i < n; ++i) {
-		_return[i] = (TestType) doubleToI16(_return[i], 0.125, -2.5);
+		_return.vals[i] = doubleToI16((double)rand(), 0.125, -2.5);
 	}
-	/*
-	std::clock_t end = clock();
-	cout << n << "\t" << (end - start + 0.0) << endl;
-	*/
   }
 
   ~OscopeHandler() {

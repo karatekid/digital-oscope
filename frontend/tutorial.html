@@ -63,7 +63,7 @@
 		}
 		var end   = (new Date()).getTime();
 		console.log((end - start) + "ms to receive " + dataArray.length + " points");
-		//testUpdate(dataArray.length,(end-start));
+		testUpdate(dataArray.length,(end-start));
 
 		start   = (new Date()).getTime();
 		drawChart(dataToArrs(dataArray));
