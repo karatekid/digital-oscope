@@ -31,6 +31,10 @@
 #include "gen-cpp/Oscope.h"
 #include "gen-cpp/oscope_constants.h"
 
+//Boost Libraries
+#include <boost/thread.hpp>
+#include <boost/date_time.hpp>
+
 //Digilent Library
 #include <digilent/waveforms/dwf.h>
 
@@ -182,6 +186,10 @@ class OscopeHandler : virtual public OscopeIf {
 
 };
 
+void discoveryProcessor() {
+	printf("hello\n");
+}
+
 int main(int argc, char **argv) {
 	//Protocol should be JSON
 	boost::shared_ptr<TProtocolFactory> protocolFactory(new TJSONProtocolFactory());
@@ -196,6 +204,9 @@ int main(int argc, char **argv) {
 			transportFactory,
 			protocolFactory);
 
+	cout << "Starting the Discovery thread..." << endl;
+	boost::thread discoveryThread(discoveryProcessor);
+	discoveryThread.join();
 	cout << "Starting the server..." << endl;
 	server.serve();
 	cout << "Done." << endl;

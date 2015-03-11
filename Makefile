@@ -1,14 +1,18 @@
 #Compiler Directives
 CXX=g++
-BOOST_DIR  = /home/michael/Development/boost_1_57_0 
+BOOST_DIR  = /home/michael/Development/boost_1_57_0
+BOOST_LIB  = $(BOOST_DIR)/stage/lib
 THRIFT_DIR = /usr/local/include/thrift
 CPPFLAGS   = -I$(BOOST_DIR)\
 		     -I$(THRIFT_DIR)\
-			 -Ibackend 
+			 -Ibackend \
+			 -Wl,-rpath=$(BOOST_LIB) #Instead of setting LD_LIBRARY_PATH
 LDFLAGS    = -L/usr/local/lib\
-			 -L/usr/lib
+			 -L$(BOOST_LIB)
 LIBS       = -lthrift \
-			 -ldwf
+			 -ldwf \
+			 -lboost_system \
+			 -lboost_thread
 #Directories
 IDIR=backend/include
 LDIR=backend/lib
