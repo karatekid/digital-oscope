@@ -56,15 +56,17 @@ using namespace ::oscope;
 
 class OscopeHandler : virtual public OscopeIf {
  protected:
-	HDWF device;
-	bool deviceInit;
-	int channel;
-	int bufSize;
-	int numBits;
 	TestType *throughputArray;
 	int throughputSize;
 	InvalidOperation DEV_NOT_FOUND;
  public:
+	static HDWF device;
+	static bool deviceInit;
+	static int channel;
+	static int bufSize;
+	static double frequency;
+	static int numBits;
+	static ADCVals trueADC;
   OscopeHandler() {
 	  DEV_NOT_FOUND = InvalidOperation();
 	  DEV_NOT_FOUND.why = "Device not found";
@@ -109,7 +111,7 @@ class OscopeHandler : virtual public OscopeIf {
 	  if(deviceInit) {
 		  FDwfAnalogInReset(device);
 		  FDwfAnalogInAcquisitionModeSet(device, acqmodeScanShift);
-		  double frequency = 100000;
+		  frequency = 100000;
 		  channel = 0; //0-indexed
 		  bufSize = 10000;
 
@@ -143,27 +145,7 @@ class OscopeHandler : virtual public OscopeIf {
 
   void getData(ADCVals & _return) {
 	  if(deviceInit) {
-		  DwfState devState;
-		  FDwfAnalogInStatus(device, true, &devState);
-
-		  _return = ADCVals();
-		  double range;
-		  FDwfAnalogInChannelRangeGet(device, channel, &range);
-		  _return.step = range/((1 << numBits) - 1); 
-
-		  double offset;
-		  FDwfAnalogInChannelOffsetGet(device, channel, &offset);
-		  _return.base = offset;
-
-		  double * data = new double[bufSize];
-		  FDwfAnalogInStatusData(device,channel, data, bufSize); 
-		  _return.vals.resize(bufSize);
-		  for(int i = 0; i < bufSize; ++i) {
-			  _return.vals[i] = doubleToI16(data[i],_return.step,_return.base);
-		  }
-		  delete[] data;
-		  //Stop instrument
-		  FDwfAnalogInConfigure(device, false, false);
+		  _return = trueADC;
 	  } else {
 		  throw DEV_NOT_FOUND;
 	  }
@@ -180,15 +162,53 @@ class OscopeHandler : virtual public OscopeIf {
 	}
   }
 
+  static void discoveryProcessor() {
+	  boost::posix_time::millisec workTime(max(bufSize/frequency * 1000 - 1000,0.0)); //or millisec
+	  ADCVals tempADC = ADCVals();
+	  if(deviceInit) {
+		  for(;;) {
+			  DwfState devState;
+			  FDwfAnalogInStatus(device, true, &devState);
+
+			  double range;
+			  FDwfAnalogInChannelRangeGet(device, channel, &range);
+			  tempADC.step = range/((1 << numBits) - 1); 
+
+			  double offset;
+			  FDwfAnalogInChannelOffsetGet(device, channel, &offset);
+			  tempADC.base = offset;
+
+			  double * data = new double[bufSize];
+			  FDwfAnalogInStatusData(device,channel, data, bufSize); 
+			  tempADC.vals.resize(bufSize);
+			  for(int i = 0; i < bufSize; ++i) {
+				  tempADC.vals[i] = doubleToI16(data[i],tempADC.step,tempADC.base);
+			  }
+			  delete[] data;
+			  //Stop instrument
+			  FDwfAnalogInConfigure(device, false, false);
+			  //TODO:Lock
+			  trueADC = tempADC;
+			  //TODO:UnLock
+			  boost::this_thread::sleep(workTime);
+		  }
+	  }
+  }
+
   ~OscopeHandler() {
 	  FDwfDeviceCloseAll();
   }
 
 };
 
-void discoveryProcessor() {
-	printf("hello\n");
-}
+HDWF OscopeHandler::device;
+bool OscopeHandler::deviceInit = false;
+int OscopeHandler::channel = 0;
+int OscopeHandler::bufSize = 0;
+double OscopeHandler::frequency = 10000;
+int OscopeHandler::numBits = 14;
+ADCVals OscopeHandler::trueADC = ADCVals();
+
 
 int main(int argc, char **argv) {
 	//Protocol should be JSON
@@ -205,8 +225,7 @@ int main(int argc, char **argv) {
 			protocolFactory);
 
 	cout << "Starting the Discovery thread..." << endl;
-	boost::thread discoveryThread(discoveryProcessor);
-	discoveryThread.join();
+	boost::thread discoveryThread(OscopeHandler::discoveryProcessor);
 	cout << "Starting the server..." << endl;
 	server.serve();
 	cout << "Done." << endl;
