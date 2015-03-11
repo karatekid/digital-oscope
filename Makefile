@@ -31,7 +31,6 @@ GEN_SRC = $(notdir $(GEN_LNG_SRC))
 SRC    = $(USR_SRC) $(GEN_SRC)
 _IDL=oscope.thrift
 IDL=$(patsubst %,$(IDL_DIR)/%,$(_IDL))
-IDL_SEED=$(patsubst %,$(IDL_DIR)/%,oscope.thrift)
 _OBJ=$(SRC:.cpp=.o)
 #Generated objs
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -83,10 +82,11 @@ $(BINFILE):	$(OBJ) $(DEPS)
 
 generate: $(IDL)
 	$(E)Generating C++ and JS files from IDL
-	$(Q)thrift -r --gen cpp $(IDL_SEED)
+	$(Q)thrift -r --gen cpp $(IDL)
 	$(Q)#This hack allows me to restart make, and recompute globals on first gen
 	$(Q)if [ ! -d $(GEN_CPP_DIR) ]; then mv gen-cpp backend && make; else rm -rf gen-cpp;	fi
-	$(Q)thrift -r --gen js  $(IDL_SEED)
+	$(Q)#This doesn't update the generated code on a .thrift change
+	$(Q)thrift -r --gen js  $(IDL)
 	$(Q)if [ ! -d $(GEN_JS_DIR) ]; then mv gen-js frontend; else rm -rf gen-js;	fi 
 
 test: all
