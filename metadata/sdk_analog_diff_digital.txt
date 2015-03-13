@@ -1,0 +1,31 @@
+A: 	StatusSample
+	''Record
+	''RecordLength[Set | Get]
+
+B: 	Frequency vs Clock
+A: 	Frequency[Info | Set | Get]
+D: 	ClockSource[Info | Set | get]
+	InternalClockInfo
+	Divider[Info | Set | Get]
+	
+D: 	SampleFormat[Set | Get]
+D: 	SampleMode[Info | Set | Get]
+
+A: 	ChannelCount
+	ChannelEnable[Set | Get]
+	ChannelFilter[Info | Set | Get]
+	ChannelRange[Info | Set | Get]
+	ChannelRangeSteps
+	ChannelOffset[Info | Set | Get]
+
+D: 	Trigger[Info | Set | Get]
+A:	TriggerHoldOff[Info | Set | Get]	
+	TriggerType[Info | Set | Get]
+	TriggerChannel[Info | Set | Get]
+	TriggerFilter[Info | Set | Get]
+	TriggerCondition[Info | Set | Get]
+	TriggerLevel[Info | Set | Get]
+	TriggerHysteresis[Info | Set | Get]
+	TriggerLengthCondition[Info | Set | Get]
+	TriggerLength[Info | Set | Get]
+	

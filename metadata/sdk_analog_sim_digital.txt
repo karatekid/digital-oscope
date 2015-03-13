@@ -1,0 +1,16 @@
+Reset
+Configure
+Status
+	SamplesLeft
+	SamplesValid
+	IndexWrite
+	AutoTriggered
+	Data
+
+BitsInfo
+BufferSize[Info | Set | Get]
+AcquisitionMode[Info | Set | Get]
+
+TriggerSource[Info | Set | Get]
+TriggerPosition[Info | Set | Get]
+TriggerAutoTimeout[Info | Set | Get]
