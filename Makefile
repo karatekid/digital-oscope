@@ -6,7 +6,9 @@ THRIFT_DIR = /usr/local/include/thrift
 CPPFLAGS   = -I$(BOOST_DIR)\
 		     -I$(THRIFT_DIR)\
 			 -Ibackend \
-			 -Wl,-rpath=$(BOOST_LIB) #Instead of setting LD_LIBRARY_PATH
+			 -std=c++11 \
+			 -Wl,-rpath=$(BOOST_LIB) #Instead of setting LD_LIBRARY_PATH 
+			 
 LDFLAGS    = -L/usr/local/lib\
 			 -L$(BOOST_LIB)
 LIBS       = -lthrift \
@@ -24,7 +26,11 @@ GEN_DIRS = $(GEN_CPP_DIR)\
 		   $(GEN_JS_DIR)
 #Files
 BINFILE= cppServer
+SRC_W_HEAD= Device.cpp \
+			AnalogInput.cpp \
+			DigitalInput.cpp
 USR_SRC= CppServer.cpp \
+		 $(SRC_W_HEAD)
 
 GEN_LNG_SRC = $(shell if [ -d $(GEN_CPP_DIR) ]; then ls $(GEN_CPP_DIR)/*.cpp | grep -v '.skeleton.cpp'; fi)
 GEN_SRC = $(notdir $(GEN_LNG_SRC))
@@ -34,7 +40,7 @@ IDL=$(patsubst %,$(IDL_DIR)/%,$(_IDL))
 _OBJ=$(SRC:.cpp=.o)
 #Generated objs
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
-_DEPS= 
+_DEPS=$(SRC_W_HEAD:.cpp=.h) 
 DEPS=$(patsubst %,$(IDIR)/%,$(_DEPS))
 
 #Flag Handling
