@@ -134,7 +134,7 @@ class OscopeHandler : virtual public OscopeIf {
 	  boost::posix_time::millisec workTime(max(bufSize/frequency * 1000 - 1000,0.0)); //or millisec
 	  if(dev.isInitialized()) {
 		  for(;;) {
-			  dev.analogIn.continuousSnapRead();
+			  dev.analogIn.read();
 			  if(dev.analogIn.data.size()) {
 				  trueADC = dev.analogIn.data[0];
 			  }

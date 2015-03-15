@@ -24,9 +24,14 @@ void Input::start() {
 	//data.resize(portsInUse);
 }
 
+void Input::singleRead() {
+	while(status(true) && !statusSamplesValid()){
+		continuousSnapRead();
+	}
+}
+
 void Input::continuousSnapRead() {
 	DwfState devState = status(true);
-	assert(data.size() >= portsInUse);
 	for(int i = 0; i < portsInUse; ++i) {
 		data[i] = statusPortData(i, bufSize);
 	}
@@ -45,6 +50,26 @@ void Input::completeScanRead() {
 		data[i].base = tmpData[i].base;
 	}
 	lastWriteIdx = index;
+}
+
+std::vector<oscope::ADCVals> Input::clearData() {
+	std::vector<oscope::ADCVals> temp = data;
+	data.clear();
+	return temp;
+}
+
+void Input::read() {
+	switch(curMode) {
+		case oscope::InputMode::Single:
+			singleRead();
+			break;
+		case oscope::InputMode::Snapshots:
+			continuousSnapRead();
+			break;
+		case oscope::InputMode::Continuous:
+			completeScanRead();
+			break;
+	}
 }
 
 void appendFromItoJ(const std::vector<int16_t> &from, 

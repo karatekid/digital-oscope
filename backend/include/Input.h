@@ -23,10 +23,13 @@ class Input {
 		Input();
 
 		void start();
+		void read(); // does one of the following depeding on current mode
 		void continuousSnapRead();
 		void completeScanRead();
-		/*
+		//Useful when doing scan read
+		std::vector<oscope::ADCVals> clearData();
 		void singleRead();
+		/*
 		*/
 		//Configuration functions, return actual set parameter
 		virtual double setFrequency(double f) = 0; //Pure Virtual Function
@@ -45,6 +48,7 @@ class Input {
 		int portsInUse;
 		int bufSize;
 		int lastWriteIdx;
+		oscope::InputMode::type curMode;
 
 	private:
 		virtual DwfState status(bool readData) = 0;

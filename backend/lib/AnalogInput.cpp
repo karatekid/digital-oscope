@@ -137,6 +137,7 @@ void AnalogInput::setMode(oscope::InputMode::type inputType) {
 			break;
 	}
 	FDwfAnalogInAcquisitionModeSet(device, acqMode);
+	curMode = inputType;
 }
 
 int16_t doubleToI16(double val, double step, double offset){
