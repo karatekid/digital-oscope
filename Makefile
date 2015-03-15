@@ -28,7 +28,8 @@ GEN_DIRS = $(GEN_CPP_DIR)\
 BINFILE= cppServer
 SRC_W_HEAD= Device.cpp \
 			AnalogInput.cpp \
-			DigitalInput.cpp
+			DigitalInput.cpp \
+			Input.cpp
 USR_SRC= CppServer.cpp \
 		 $(SRC_W_HEAD)
 
@@ -71,13 +72,17 @@ help:
 	$(E)nuke:		Removes all generated code, and cleans
 	$(E)
 
-#User Files
-$(ODIR)/%.o: $(LDIR)/%.cpp $(DEPS)
+#User Files w/ Header
+$(ODIR)/%.o: $(LDIR)/%.cpp $(IDIR)/%.h
+	$(E)C++-compiling $<
+	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(Q)$(CXX) -o $@ -c $< $(CPPFLAGS) -I$(IDIR)
+$(ODIR)/%.o: $(LDIR)/%.cpp
 	$(E)C++-compiling $<
 	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(Q)$(CXX) -o $@ -c $< $(CPPFLAGS) -I$(IDIR)
 #Generated Files TODO:(don't like how copying the same as userfile)
-$(ODIR)/%.o: $(GEN_CPP_DIR)/%.cpp $(DEPS)
+$(ODIR)/%.o: $(GEN_CPP_DIR)/%.cpp $(GEN_CPP_DIR)/%.h
 	$(E)C++-compiling $<
 	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(Q)$(CXX) -o $@ -c $< $(CPPFLAGS) -I$(IDIR)
@@ -104,6 +109,8 @@ clean:
 	$(Q)rm -f $(ODIR)/*.o $(BINFILE)
 	$(Q)if [ -d $(ODIR) ]; then rmdir $(ODIR); fi
 
-nuke: clean
+rm_gen:
 	$(E)Removing generated code
 	$(Q)rm -rf $(GEN_DIRS)
+
+nuke: clean rm_gen

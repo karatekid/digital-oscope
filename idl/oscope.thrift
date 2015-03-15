@@ -21,6 +21,12 @@ enum DeviceType {
   OTHER     = 2
 }
 
+enum InputMode {
+  Single     = 1
+  Snapshots  = 2,
+  Continuous = 3
+}
+
 struct Limit {
   1: i32 min,
   2: i32 max
