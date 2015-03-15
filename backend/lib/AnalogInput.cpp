@@ -114,6 +114,8 @@ void AnalogInput::useTheseChannels(uint16_t bitOn) {
 		} else {
 			FDwfAnalogInChannelEnableSet(device, i, false);
 		}
+		//TODO: Range configuration, not sure why 2??
+		FDwfAnalogInChannelRangeSet(device, i, 2);
 		portsInUse = i+1; //TODO: Assuming for analog just use these to determine length of data?
 	}
 }
