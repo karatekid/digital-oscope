@@ -34,7 +34,8 @@ Device::Device() {
 	deviceInitialized = true;
 
 	//Setup Instruments
-	analogIn = AnalogInput(device);
+	analogIn  = AnalogInput(device);
+	digitalIn = DigitalInput(device);
 }
 
 bool Device::isInitialized() {

@@ -12,10 +12,10 @@
 #include "Input.h"
 
 Input::Input(HDWF inDev) 
-	:portsInUse(0), device(inDev){
+	:portsInUse(0), lastWriteIdx(0), device(inDev){
 }
 Input::Input() 
-	:portsInUse(0){
+	:portsInUse(0), lastWriteIdx(0){
 }
 
 void Input::start() {
@@ -31,7 +31,13 @@ void Input::singleRead() {
 }
 
 void Input::continuousSnapRead() {
+	configure(true, true);
 	DwfState devState = status(true);
+	printf("state: %d, Left: %d, Valid: %d, index: %d\n",
+			devState,
+			statusSamplesLeft(),
+			statusSamplesValid(),
+			statusIndexWrite());
 	for(int i = 0; i < portsInUse; ++i) {
 		data[i] = statusPortData(i, bufSize);
 	}
@@ -44,6 +50,7 @@ void Input::completeScanRead() {
 		tmpData[i] = statusPortData(i, bufSize);
 	}
 	int index = statusIndexWrite();
+	printf("index: %d\n", index);
 	for(int i = 0; i < portsInUse; ++i) {
 		appendFromItoJ(tmpData[i].vals, data[i].vals, lastWriteIdx, index);
 		data[i].step = tmpData[i].step;
@@ -54,7 +61,9 @@ void Input::completeScanRead() {
 
 std::vector<oscope::ADCVals> Input::clearData() {
 	std::vector<oscope::ADCVals> temp = data;
-	data.clear();
+	for(int i = 0; i < data.size(); ++i) {
+		data[i].vals.clear();
+	}
 	return temp;
 }
 

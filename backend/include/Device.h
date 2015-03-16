@@ -14,7 +14,7 @@
 class Device {
 	public:
 		//Members
-		//DigitalInput digitalIn;
+		DigitalInput digitalIn;
 		AnalogInput analogIn;
 		//Functions
 

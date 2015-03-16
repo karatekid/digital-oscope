@@ -78,7 +78,7 @@ class OscopeHandler : virtual public OscopeIf {
 		  throughputArray[i] = (TestType)rand();
 	  }
 	  //Setup device (don't worry, static)
-	  //dev = Device();
+	  //Analog
 	  frequency = 100000;
 	  channel = 0; //0-indexed
 	  bufSize = 10000;
@@ -88,10 +88,19 @@ class OscopeHandler : virtual public OscopeIf {
 	  dev.analogIn.setMode(InputMode::Snapshots);
 	  dev.analogIn.useTheseChannels(1 << channel); //Channel 0
 
+	  //Digital
+	  dev.digitalIn.resetParameters();
+	  double digitalFreq = dev.digitalIn.setFrequency(400000);
+	  int bufSize = dev.digitalIn.setBufferSize(10000);
+	  printf("Freq: %f, buf: %d\n", digitalFreq, bufSize);
+	  dev.digitalIn.setMode(InputMode::Single);
+	  dev.digitalIn.useTheseChannels(0x8001); //All
+
 	  sleep(1);
 
 	  //Start
 	  dev.analogIn.start();
+	  dev.digitalIn.start();
   }
 
   void ping(DeviceInfo& _return) {
@@ -138,6 +147,16 @@ class OscopeHandler : virtual public OscopeIf {
 			  if(dev.analogIn.data.size()) {
 				  trueADC = dev.analogIn.data[0];
 			  }
+
+			  dev.digitalIn.read();
+			  if(dev.digitalIn.data.size()) {
+				  vector<ADCVals> digitalResults = dev.digitalIn.clearData();
+				  //printf("Hey, internal size: %d\n", digitalResults[0].vals.size());
+				  for(int i = 0; i < digitalResults[0].vals.size(); ++i) {
+					  //printf("%x\n",digitalResults[0].vals[i]);
+				  }
+			  }
+
 			  //TODO:UnLock
 			  boost::this_thread::sleep(workTime);
 		  }
