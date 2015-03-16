@@ -31,13 +31,14 @@ void Input::singleRead() {
 }
 
 void Input::continuousSnapRead() {
-	configure(true, true);
 	DwfState devState = status(true);
+	/*
 	printf("state: %d, Left: %d, Valid: %d, index: %d\n",
 			devState,
 			statusSamplesLeft(),
 			statusSamplesValid(),
 			statusIndexWrite());
+			*/
 	for(int i = 0; i < portsInUse; ++i) {
 		data[i] = statusPortData(i, bufSize);
 	}
