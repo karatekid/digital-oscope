@@ -81,7 +81,7 @@ class OscopeHandler : virtual public OscopeIf {
 	  //Analog
 	  frequency = 100000;
 	  channel = 0; //0-indexed
-	  bufSize = 10000;
+	  int bufSize = 4000;
 	  dev.analogIn.resetParameters();
 	  frequency = dev.analogIn.setFrequency(frequency);
 	  bufSize   = dev.analogIn.setBufferSize(bufSize);
@@ -91,9 +91,9 @@ class OscopeHandler : virtual public OscopeIf {
 	  //Digital
 	  dev.digitalIn.resetParameters();
 	  double digitalFreq = dev.digitalIn.setFrequency(400000);
-	  int bufSize = dev.digitalIn.setBufferSize(10000);
+	  bufSize = dev.digitalIn.setBufferSize(bufSize);
 	  printf("Freq: %f, buf: %d\n", digitalFreq, bufSize);
-	  dev.digitalIn.setMode(InputMode::Single);
+	  dev.digitalIn.setMode(InputMode::Continuous);
 	  dev.digitalIn.useTheseChannels(0x8001); //All
 
 	  sleep(1);

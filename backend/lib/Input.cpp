@@ -50,7 +50,7 @@ void Input::completeScanRead() {
 	for(int i = 0; i < portsInUse; ++i) {
 		tmpData[i] = statusPortData(i, bufSize);
 	}
-	int index = statusIndexWrite();
+	int index = statusIndexWrite() % bufSize;
 	printf("index: %d\n", index);
 	for(int i = 0; i < portsInUse; ++i) {
 		appendFromItoJ(tmpData[i].vals, data[i].vals, lastWriteIdx, index);
