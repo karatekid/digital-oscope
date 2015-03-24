@@ -1,0 +1,28 @@
+body {
+  font: 10px sans-serif;
+  margin: 0;
+}
+
+.border-box > .border-left,
+.border-box > .border-bottom {
+	fill: #DF9F6A;
+}
+
+.border-box > .background {
+	fill: #DADADA;
+}
+
+.canvas > .background {
+	fill: #EAEAEA;
+}
+
+.canvas > path {
+	stroke: #656565;
+	fill: none;
+}
+
+.x-rule line,
+.y-rule line {
+  stroke: #FAFAFA;
+  shape-rendering: crispEdges;
+}
