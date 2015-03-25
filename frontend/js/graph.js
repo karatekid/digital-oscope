@@ -5,20 +5,20 @@ window.onload = function(){
     xMin = 0,
     xMax = 5000;
 
-  var scale = initializeGraph(yMin, yMax, xMin, xMax);
-  graphData(scale);
-
-  window.onresize = function(){
-    scale = resizeGraph(yMin, yMax, xMin, xMax)
-    graphData(scale);
-  }
-};
-
-function graphData(scale) {
   var data = d3.range(5000).map(function(i) {
     return {x : i, y : Math.sin(i/1000) * 25};
   });
 
+  scale = initializeGraph(yMin, yMax, xMin, xMax);
+  graphData(data, scale);
+
+  window.onresize = function(){
+    scale = resizeGraph(yMin, yMax, xMin, xMax)
+    graphData(data, scale);
+  }
+};
+
+function graphData(data, scale) {
   var line = d3.svg.line()
     .interpolate("linear")
     .y(function(d){ return scale.y(d.y); })
@@ -41,6 +41,28 @@ function graphData(scale) {
   var timeB = (new Date()).getTime();
   console.log( timeB - timeA );
 
+}
+
+function getScale(yMin, yMax, xMin, xMax) {
+  var margin = {top : 40, right : 40, bottom : 40, left : 40};
+  var border = {top : 0, right : 0, bottom : 10, left : 10};
+
+  var graphHeight = 600,
+      graphWidth = window.innerWidth,
+      borderBoxHeight = graphHeight - margin.top - margin.bottom,
+      borderBoxWidth = graphWidth - margin.right - margin.left,
+      canvasHeight = borderBoxHeight - border.top - border.bottom,
+      canvasWidth = borderBoxWidth - border.right - border.left;
+      
+  return {
+    y : d3.scale.linear()
+    .domain([yMin, yMax])
+    .range([0, canvasHeight]),
+      
+    x : d3.scale.linear()
+    .domain([xMin, xMax])
+    .range([0, canvasWidth])
+  };
 }
 
 function initializeGraph(yMin, yMax, xMin, xMax){
