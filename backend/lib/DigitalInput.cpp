@@ -13,6 +13,7 @@
 
 DigitalInput::DigitalInput(HDWF inDev)
 	:Input(inDev), bitMask(0) {
+	FDwfDigitalIOOutputEnableSet(inDev, 0);
 }
 
 DigitalInput::DigitalInput()

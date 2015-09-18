@@ -151,12 +151,13 @@ class OscopeHandler : virtual public OscopeIf {
 			  dev.digitalIn.read();
 			  if(dev.digitalIn.data.size()) {
 				  vector<ADCVals> digitalResults = dev.digitalIn.clearData();
-				  /*
 				  printf("Hey, internal size: %d\n", digitalResults[0].vals.size());
 				  for(int i = 0; i < digitalResults[0].vals.size(); ++i) {
-					  printf("%x\n",digitalResults[0].vals[i]);
+					  if(digitalResults[0].vals[i] == 0) {
+						  printf("0\n");
+					  }
+					  //printf("%x\n",digitalResults[0].vals[i]);
 				  }
-				  */
 			  }
 
 			  //TODO:UnLock
