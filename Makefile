@@ -8,13 +8,19 @@ CPPFLAGS   = -I$(BOOST_DIR)\
 			 -Ibackend \
 			 -std=c++11 \
 			 -Wl,-rpath=$(BOOST_LIB) #Instead of setting LD_LIBRARY_PATH 
+TEST_CPPFLAGS   = -I$(THRIFT_DIR)\
+			      -Ibackend \
+			      -std=c++11
 			 
 LDFLAGS    = -L/usr/local/lib\
 			 -L$(BOOST_LIB)
+TEST_LDFLAGS = -L/usr/local/lib
 LIBS       = -lthrift \
 			 -ldwf \
 			 -lboost_system \
 			 -lboost_thread
+TEST_LIBS  = -lthrift \
+			 -ldwf
 #Directories
 IDIR=backend/include
 LDIR=backend/lib
@@ -26,6 +32,7 @@ GEN_DIRS = $(GEN_CPP_DIR)\
 		   $(GEN_JS_DIR)
 #Files
 BINFILE= cppServer
+TEST_BINFILE=tester
 SRC_W_HEAD= Device.cpp \
 			AnalogInput.cpp \
 			DigitalInput.cpp \
@@ -43,6 +50,12 @@ _OBJ=$(SRC:.cpp=.o)
 OBJ=$(patsubst %,$(ODIR)/%,$(_OBJ))
 _DEPS=$(SRC_W_HEAD:.cpp=.h) 
 DEPS=$(patsubst %,$(IDIR)/%,$(_DEPS))
+
+TEST_FILE= test.cpp 
+TEST_SRC= $(TEST_FILE) \
+		  $(GEN_SRC) \
+		 $(SRC_W_HEAD)
+TEST_OBJ=$(patsubst %,$(ODIR)/%,$(TEST_FILE:.cpp=.o))
 
 #Flag Handling
 ifdef DEBUG
@@ -76,20 +89,29 @@ help:
 $(ODIR)/%.o: $(LDIR)/%.cpp $(IDIR)/%.h
 	$(E)C++-compiling $<
 	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(Q)$(CXX) -o $@ -c $< $(CPPFLAGS) -I$(IDIR)
+	$(Q)$(CXX) -o $@ -c $< $(TEST_CPPFLAGS) -I$(IDIR)
 $(ODIR)/%.o: $(LDIR)/%.cpp
 	$(E)C++-compiling $<
 	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
 	$(Q)$(CXX) -o $@ -c $< $(CPPFLAGS) -I$(IDIR)
+$(TEST_OBJ): $(LDIR)/$(TEST_FILE)
+	$(E)C++-compiling $<
+	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
+	$(Q)$(CXX) -o $@ -c $< $(TEST_CPPFLAGS) -I$(IDIR)
+
 #Generated Files TODO:(don't like how copying the same as userfile)
 $(ODIR)/%.o: $(GEN_CPP_DIR)/%.cpp $(GEN_CPP_DIR)/%.h
 	$(E)C++-compiling $<
 	$(Q)if [ ! -d `dirname $@` ]; then mkdir -p `dirname $@`; fi
-	$(Q)$(CXX) -o $@ -c $< $(CPPFLAGS) -I$(IDIR)
+	$(Q)$(CXX) -o $@ -c $< $(TEST_CPPFLAGS) -I$(IDIR)
 
 $(BINFILE):	$(OBJ) $(DEPS)
 	$(E)Linking $@
 	$(Q)$(CXX) -o $@ $^ $(CPPFLAGS) $(LIBS) $(LDFLAGS)
+
+$(TEST_BINFILE): $(filter-out backend/obj/CppServer.o, $(OBJ)) $(TEST_OBJ) $(DEPS)
+	$(E)Linking $@
+	$(Q)$(CXX) -o $@ $^ $(TEST_CPPFLAGS) $(TEST_LIBS) $(TEST_LDFLAGS)
 
 generate: $(IDL)
 	$(E)Generating C++ and JS files from IDL
@@ -100,9 +122,9 @@ generate: $(IDL)
 	$(Q)thrift -r --gen js  $(IDL)
 	$(Q)if [ ! -d $(GEN_JS_DIR) ]; then mv gen-js frontend; else rm -rf gen-js;	fi 
 
-test: all
-	$(Q)chromium-browser frontend/tutorial.html
-	$(Q)./$(BINFILE)
+test: generate $(TEST_BINFILE)
+	$(Q)#chromium-browser frontend/tutorial.html
+	$(Q)./$(TEST_BINFILE)
 
 clean:
 	$(E)Removing Files
